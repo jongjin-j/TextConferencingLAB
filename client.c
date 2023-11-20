@@ -70,4 +70,3 @@ int main()
 	// close the socket
 	close(sockfd);
 }
-

@@ -57,124 +57,124 @@ struct User users[MAX_USERS] = {
 		{"user3", "pass3"},
 };
 
-// Function designed for chat between client and server. 
-void func(int connfd) 
-{ 
-	char buff[MAX]; 
-	int n; 
-	// infinite loop for chat 
-	for (;;) { 
-		bzero(buff, MAX); 
+// // Function designed for chat between client and server. 
+// void func(int connfd, char buff[1024]) 
+// { 
+// 	// char buff[MAX]; 
+// 	int n; 
+// 	// infinite loop for chat 
+// 	for (;;) { 
+// 		bzero(buff, MAX); 
 
-		// read the message from client and copy it in buffer 
-		read(connfd, buff, sizeof(buff)); 
-		// print buffer which contains the client contents 
+// 		// read the message from client and copy it in buffer 
+// 		read(connfd, buff, sizeof(buff)); 
+// 		// print buffer which contains the client contents 
 		
-		//--------------------------------------------------------------------------
-		//IMPLEMNETING THE COMMANDS ON THE STDIN FILE STREAM
-		// if msg contains "login" then 
-		if (strncmp("/login", buff, strlen("/login")) == 0) { 
-			//will need to perform some error checking in here
-			//for things like correct types, handle cases for missing arguments, etc.
-			printf("COMMAND: LOGIN...\n"); 
-			char *token = strtok(buff, " "); //assuming space as delimter
-			token = strtok(NULL, " "); //get second argument
-			printf("client_ID is: %s\n", token);
-			char* client_ID = token;
+// 		//--------------------------------------------------------------------------
+// 		//IMPLEMNETING THE COMMANDS ON THE STDIN FILE STREAM
+// 		// if msg contains "login" then 
+// 		if (strncmp("/login", buff, strlen("/login")) == 0) { 
+// 			//will need to perform some error checking in here
+// 			//for things like correct types, handle cases for missing arguments, etc.
+// 			printf("COMMAND: LOGIN...\n"); 
+// 			char *token = strtok(buff, " "); //assuming space as delimter
+// 			token = strtok(NULL, " "); //get second argument
+// 			printf("client_ID is: %s\n", token);
+// 			char* client_ID = token;
 
-			token = strtok(NULL, " "); //get third argument
-			printf("password is: %s\n", token);
-			char *password = token;
+// 			token = strtok(NULL, " "); //get third argument
+// 			printf("password is: %s\n", token);
+// 			char *password = token;
 
-			token = strtok(NULL, " "); //get fourth argument
-			printf("ip addr is: %s\n", token);
-			char *addr = token;
+// 			token = strtok(NULL, " "); //get fourth argument
+// 			printf("ip addr is: %s\n", token);
+// 			char *addr = token;
 
-			token = strtok(NULL, " "); //get fifth argument
-			printf("port is: %s\n", token);
-			char *port = token;
+// 			token = strtok(NULL, " "); //get fifth argument
+// 			printf("port is: %s\n", token);
+// 			char *port = token;
 
-			//-------------authenticate user
-			int authenticate = 0;
-			for(int i = 0; i<MAX_USERS; i++){
-				if(strcmp(users[i].username, client_ID)==0){
-					if(strcmp(users[i].password, password)==0){
-						printf("Authentication successful.\n");
+// 			//-------------authenticate user
+// 			int authenticate = 0;
+// 			for(int i = 0; i<MAX_USERS; i++){
+// 				if(strcmp(users[i].username, client_ID)==0){
+// 					if(strcmp(users[i].password, password)==0){
+// 						printf("Authentication successful.\n");
 
-						clientArray = (struct Client *)malloc((numberOfClients+1) * sizeof(struct Client));
-						strcpy(clientArray[numberOfClients].client_ID, client_ID);
-						clientArray[numberOfClients].session_ID = -1;	//no sessions created yet 
-						numberOfClients++;
+// 						clientArray = (struct Client *)malloc((numberOfClients+1) * sizeof(struct Client));
+// 						strcpy(clientArray[numberOfClients].client_ID, client_ID);
+// 						clientArray[numberOfClients].session_ID = -1;	//no sessions created yet 
+// 						numberOfClients++;
 
-						authenticate = 1;
-					}
-				}
-			}
-			if(authenticate == 0){
-				printf("Authentication failed!\n");
-			}
+// 						authenticate = 1;
+// 					}
+// 				}
+// 			}
+// 			if(authenticate == 0){
+// 				printf("Authentication failed!\n");
+// 			}
 
-			for(int i = 0; i<numberOfClients; i++){
-				printf("%s\n", clientArray[i].client_ID);
-			}
-		} 
+// 			for(int i = 0; i<numberOfClients; i++){
+// 				printf("%s\n", clientArray[i].client_ID);
+// 			}
+// 		} 
 
-		if (strncmp("/logout", buff, strlen("/logout")) == 0) { 
-			printf("COMMAND: LOGOUT...\n"); 
-		} 
+// 		if (strncmp("/logout", buff, strlen("/logout")) == 0) { 
+// 			printf("COMMAND: LOGOUT...\n"); 
+// 		} 
 
-		if (strncmp("/joinsession", buff, strlen("/joinsession")) == 0) { 
-			printf("COMMAND: JOIN_SESSION...\n"); 
-			char *token = strtok(buff, " "); //assuming space as delimter
-			token = strtok(NULL, " "); //get second argument
-			printf("session_ID is: %s\n", token);
-			char* session_ID = token;
-		} 
+// 		if (strncmp("/joinsession", buff, strlen("/joinsession")) == 0) { 
+// 			printf("COMMAND: JOIN_SESSION...\n"); 
+// 			char *token = strtok(buff, " "); //assuming space as delimter
+// 			token = strtok(NULL, " "); //get second argument
+// 			printf("session_ID is: %s\n", token);
+// 			char* session_ID = token;
+// 		} 
 
-		if (strncmp("/leavesession", buff, strlen("/leavesession")) == 0) { 
-			printf("COMMAND: LEAVE_SESSION...\n"); 
-		} 
+// 		if (strncmp("/leavesession", buff, strlen("/leavesession")) == 0) { 
+// 			printf("COMMAND: LEAVE_SESSION...\n"); 
+// 		} 
 
-		if (strncmp("/createsession", buff, strlen("/createsession")) == 0) { 
-			printf("COMMAND: CREATE_SESSION...\n"); 
-			char *token = strtok(buff, " "); //assuming space as delimter
-			token = strtok(NULL, " "); //get second argument
-			printf("session_ID is: %s\n", token);
-			char* session_ID = token;
+// 		if (strncmp("/createsession", buff, strlen("/createsession")) == 0) { 
+// 			printf("COMMAND: CREATE_SESSION...\n"); 
+// 			char *token = strtok(buff, " "); //assuming space as delimter
+// 			token = strtok(NULL, " "); //get second argument
+// 			printf("session_ID is: %s\n", token);
+// 			char* session_ID = token;
 
-			sessionArray = (struct Session *)malloc((numberOfSessions+1) * sizeof(struct Session));
-			sessionArray[numberOfSessions].session_ID = atoi(session_ID);	//no sessions created yet 
-			// so create this session
-			// and then update the number of clients in the session
-			sessionArray[numberOfSessions].numClientsInSession = 1;
+// 			sessionArray = (struct Session *)malloc((numberOfSessions+1) * sizeof(struct Session));
+// 			sessionArray[numberOfSessions].session_ID = atoi(session_ID);	//no sessions created yet 
+// 			// so create this session
+// 			// and then update the number of clients in the session
+// 			sessionArray[numberOfSessions].numClientsInSession = 1;
 
-			// will need to get the client_ID here...
-			// strcpy(sessionArray[numberOfSessions].clients[0], client_ID);
+// 			// will need to get the client_ID here...
+// 			// strcpy(sessionArray[numberOfSessions].clients[0], client_ID);
 
-			numberOfSessions++;			
-		} 
+// 			numberOfSessions++;			
+// 		} 
 
-		if (strncmp("/list", buff, strlen("/list")) == 0) { 
-			printf("COMMAND: LIST...\n"); 
-		} 
+// 		if (strncmp("/list", buff, strlen("/list")) == 0) { 
+// 			printf("COMMAND: LIST...\n"); 
+// 		} 
 
-		printf("From client: %s\t To client : ", buff); 
-		bzero(buff, MAX); 
-		n = 0; 
-		// copy server message in the buffer 
-		while ((buff[n++] = getchar()) != '\n') 
-			; 
+// 		printf("From client: %s\t To client : ", buff); 
+// 		bzero(buff, MAX); 
+// 		n = 0; 
+// 		// copy server message in the buffer 
+// 		while ((buff[n++] = getchar()) != '\n') 
+// 			; 
 
-		// and send that buffer to client 
-		write(connfd, buff, sizeof(buff)); 
+// 		// and send that buffer to client 
+// 		write(connfd, buff, sizeof(buff)); 
 
-		// if msg contains "Exit" then server exit and chat ended. 
-		if (strncmp("quit", buff, 4) == 0) { 
-			printf("Server Quit...\n"); 
-			break; 
-		} 
-	} 
-} 
+// 		// if msg contains "Exit" then server exit and chat ended. 
+// 		if (strncmp("quit", buff, 4) == 0) { 
+// 			printf("Server Quit...\n"); 
+// 			break; 
+// 		} 
+// 	} 
+// } 
 
 // Driver function 
 int main(int argc, char *argv[]) 
@@ -200,7 +200,7 @@ int main(int argc, char *argv[])
 		client_socket[i] = 0;
 	}
 
-	// int sockfd, connfd, len; 
+	int sockfd, connfd, len; 
 	// struct sockaddr_in servaddr, cli; 
 
 	// int portNumber = atoi(argv[1]);
@@ -319,7 +319,8 @@ int main(int argc, char *argv[])
 			//check if it was for closing, and also read the incoming message
 			if((valread = read(sd, buffer, 1024)) == 0){
 				//somebody disconnected, get details and print
-				getpeername(sd, (struct sockaddr*)&address, (socklen_t*)&addrlen);
+				getpeername(sd, (struct sockaddr*)&address, \
+				 (socklen_t*)&addrlen);
 				printf("Host disconnected, ip %s, port %d \n", inet_ntoa(address.sin_addr), ntohs(address.sin_port));
 
 				//close the socket and mark as 0 in list for reuse
@@ -329,13 +330,64 @@ int main(int argc, char *argv[])
 		//echo back message that came in
 		else{
 			buffer[valread] = '\0';
-			// send(sd, buffer, strlen(buffer), 0);
-			func(sd); 
+			printf("Message from client: %s", buffer);
+
+
+			if (strncmp("/login", buffer, strlen("/login")) == 0) { 
+			//will need to perform some error checking in here
+			//for things like correct types, handle cases for missing arguments, etc.
+			printf("COMMAND: LOGIN...\n"); 
+			char *token = strtok(buffer, " "); //assuming space as delimter
+			token = strtok(NULL, " "); //get second argument
+			printf("client_ID is: %s\n", token);
+			char* client_ID = token;
+
+			token = strtok(NULL, " "); //get third argument
+			printf("password is: %s\n", token);
+			char *password = token;
+
+			token = strtok(NULL, " "); //get fourth argument
+			printf("ip addr is: %s\n", token);
+			char *addr = token;
+
+			token = strtok(NULL, " "); //get fifth argument
+			printf("port is: %s\n", token);
+			char *port = token;
+
+			//-------------authenticate user
+			int authenticate = 0;
+			for(int i = 0; i<MAX_USERS; i++){
+				if(strcmp(users[i].username, client_ID)==0){
+					if(strcmp(users[i].password, password)==0){
+						printf("Authentication successful.\n");
+
+						clientArray = (struct Client *)malloc((numberOfClients+1) * sizeof(struct Client));
+						strcpy(clientArray[numberOfClients].client_ID, client_ID);
+						clientArray[numberOfClients].session_ID = -1;	//no sessions created yet 
+						numberOfClients++;
+
+						authenticate = 1;
+					}
+				}
+			}
+			if(authenticate == 0){
+				printf("Authentication failed!\n");
+			}
+
+			for(int i = 0; i<numberOfClients; i++){
+				printf("%s\n", clientArray[i].client_ID);
+			}
+		} 
+
+
+
+			send(sd, message, strlen(message), 0);
+			break;
+
 		}
 	}
-
 }
-}
+	}
 return 0;
 }
 

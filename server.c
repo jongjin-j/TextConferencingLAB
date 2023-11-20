@@ -5,7 +5,10 @@
 // a client is someone trying to authenticate, ie. a user who is active right now
 
 #include <stdio.h> 
+#include <stdbool.h>
 #include <netdb.h> 
+#include <arpa/inet.h>
+#include <errno.h>
 #include <netinet/in.h> 
 #include <stdlib.h> 
 #include <string.h> 
@@ -17,7 +20,7 @@
 #define MAX_USERS 3
 #define MAX_USERNAME_LENGTH 80
 #define MAX_PASSWORD_LENGTH 80
-// #define PORT 8030 
+#define PORT 8030 
 #define SA struct sockaddr 
 
 //-----------SESSION DATA STRUCTURES------/
@@ -176,63 +179,195 @@ void func(int connfd)
 // Driver function 
 int main(int argc, char *argv[]) 
 { 	
-	int client_socket[MAX_CLIENTS];
+	// new variables
+	int opt = true;
+	int master_socket, addrlen, new_socket, client_socket[30], max_clients = 30, activity, i, valread, sd;
+
+	int max_sd;
+	struct sockaddr_in address;
+
+	char buffer[1025]; //data buffer of 1k
+	
+	//set of socket descriptrs
+	fd_set readfds;
+
+	// a message
+	char *message = "msg from server to me.\n";
+
+	// int client_socket[MAX_CLIENTS];
 	//initialize all client_socket to 0
 	for(int i = 0; i < MAX_CLIENTS; i++){
 		client_socket[i] = 0;
 	}
 
-	int sockfd, connfd, len; 
-	struct sockaddr_in servaddr, cli; 
+	// int sockfd, connfd, len; 
+	// struct sockaddr_in servaddr, cli; 
 
-	int portNumber = atoi(argv[1]);
-	unsigned short int PORT = (short)portNumber;
+	// int portNumber = atoi(argv[1]);
+	// unsigned short int PORT = (short)portNumber;
+
+	// create a master socket
+	if((master_socket = socket(AF_INET, SOCK_STREAM, 0)) == 0){
+		perror("socket failed");
+		exit(EXIT_FAILURE);
+	}
+
+	//set master socket to allow multiple connections
+	// good habit, program would still work without this tho
+	if(setsockopt(master_socket, SOL_SOCKET, SO_REUSEADDR, (char *)&opt, sizeof(opt)) < 0){
+		perror("setsockopt");
+		exit(EXIT_FAILURE);
+	}
 
 
-	// socket create and verification 
-	sockfd = socket(AF_INET, SOCK_STREAM, 0); 
-	if (sockfd == -1) { 
-		printf("socket creation failed...\n"); 
-		exit(0); 
-	} 
-	else
-		printf("Socket successfully created..\n"); 
-	bzero(&servaddr, sizeof(servaddr)); 
+	// // socket create and verification 
+	// sockfd = socket(AF_INET, SOCK_STREAM, 0); 
+	// if (sockfd == -1) { 
+	// 	printf("socket creation failed...\n"); 
+	// 	exit(0); 
+	// } 
+	// else
+	// 	printf("Socket successfully created..\n"); 
+	// bzero(&servaddr, sizeof(servaddr)); 
 
+	// types of socket created
 	// assign IP, PORT 
-	servaddr.sin_family = AF_INET; 
-	servaddr.sin_addr.s_addr = htonl(INADDR_ANY); 
-	servaddr.sin_port = htons(PORT); 
+	address.sin_family = AF_INET; 
+	// servaddr.sin_addr.s_addr = htonl(INADDR_ANY); 
+	address.sin_addr.s_addr = INADDR_ANY; 
+	address.sin_port = htons(PORT); 
 
-	// Binding newly created socket to given IP and verification 
-	if ((bind(sockfd, (SA*)&servaddr, sizeof(servaddr))) != 0) { 
-		printf("socket bind failed...\n"); 
-		exit(0); 
-	} 
-	else
-		printf("Socket successfully binded..\n"); 
+	// bind the socket to localhost port 8030
+	if(bind(master_socket, (struct sockaddr *)&address, sizeof(address))<0){
+		perror("bind failed");
+		exit(EXIT_FAILURE);
+	}
+	printf("Listener on port %d \n", PORT);
 
-	// Now server is ready to listen and verification 
-	if ((listen(sockfd, 5)) != 0) { 
-		printf("Listen failed...\n"); 
-		exit(0); 
-	} 
-	else
-		printf("Server listening..\n"); 
-	len = sizeof(cli); 
+	//try to specify maximum of 3 pending connections for the master socket
+	if(listen(master_socket, 3) < 0){
+		perror("listen");
+		exit(EXIT_FAILURE);
+	}
 
-	// Accept the data packet from client and verification 
-	connfd = accept(sockfd, (SA*)&cli, &len); 
-	if (connfd < 0) { 
-		printf("server accept failed...\n"); 
-		exit(0); 
-	} 
-	else
-		printf("server accept the client...\n"); 
+	//accept the incoming connection
+	addrlen = sizeof(address);
+	puts("Waiting for connections...");
 
-	// Function for chatting between client and server 
-	func(connfd); 
+	while(true){
+		//clear the socket set
+		FD_ZERO(&readfds);
 
-	// After chatting close the socket 
-	close(sockfd); 
+		//add master socket to the set
+		FD_SET(master_socket, &readfds);
+		max_sd = master_socket;
+
+		// add child socket to set
+		for(i = 0; i<max_clients; i++){
+			// socket descriptor
+			sd = client_socket[i];
+			// if valid socket descriptor then add to read list
+			if(sd > 0){
+				FD_SET(sd, &readfds);
+			}
+			//highest file descriptor number, need it for the select function
+			if(sd > max_sd){
+				max_sd = sd;
+			}
+		}
+		//wait for an activity on one of the sockets, timeour is NULL, so wait indefinitely
+		activity = select(max_sd +1, &readfds, NULL, NULL, NULL);
+
+		if((activity<0) && (errno!=EINTR)){
+			printf("Select error!");
+		}
+
+		// if something happened on the master socket, then its an incoming connection
+		if(FD_ISSET(master_socket, &readfds)){
+			if((new_socket = accept(master_socket, (struct sockaddr *)&address, (socklen_t*)&addrlen)) < 0){
+				perror("accept");
+				exit(EXIT_FAILURE);
+			}
+		
+
+		//inform user of socket number - used in send and receive commands
+		printf("New connection, socket fd is %d, ip is %s, port %d\n", new_socket, inet_ntoa(address.sin_addr), ntohs (address.sin_port));
+
+		//send new connection greeting message
+		if(send(new_socket, message, strlen(message), 0) != strlen(message)){
+			perror("Send");
+		}
+
+		puts("Welcome message sent successfully");
+
+		//add new socket to array of sockets
+		for(int i = 0; i<max_clients; i++){
+			//if position is empty
+			if(client_socket[i] == 0){
+				client_socket[i] = new_socket;
+				printf("Adding to list of sockets as %d\n", i);
+				break;
+			}
+		}
+	}
+
+	//else it has some I/O operation on some other socket
+	for(i = 0; i<max_clients; i++){
+		sd = client_socket[i];
+
+		if(FD_ISSET(sd, &readfds)){
+			//check if it was for closing, and also read the incoming message
+			if((valread = read(sd, buffer, 1024)) == 0){
+				//somebody disconnected, get details and print
+				getpeername(sd, (struct sockaddr*)&address, (socklen_t*)&addrlen);
+				printf("Host disconnected, ip %s, port %d \n", inet_ntoa(address.sin_addr), ntohs(address.sin_port));
+
+				//close the socket and mark as 0 in list for reuse
+				close(sd);
+				client_socket[i] = 0;
+			}
+		//echo back message that came in
+		else{
+			buffer[valread] = '\0';
+			// send(sd, buffer, strlen(buffer), 0);
+			func(sd); 
+		}
+	}
+
 }
+}
+return 0;
+}
+
+// 	// Binding newly created socket to given IP and verification 
+// 	if ((bind(sockfd, (SA*)&servaddr, sizeof(servaddr))) != 0) { 
+// 		printf("socket bind failed...\n"); 
+// 		exit(0); 
+// 	} 
+// 	else
+// 		printf("Socket successfully binded..\n"); 
+
+// 	// Now server is ready to listen and verification 
+// 	if ((listen(sockfd, 5)) != 0) { 
+// 		printf("Listen failed...\n"); 
+// 		exit(0); 
+// 	} 
+// 	else
+// 		printf("Server listening..\n"); 
+// 	len = sizeof(cli); 
+
+// 	// Accept the data packet from client and verification 
+// 	connfd = accept(sockfd, (SA*)&cli, &len); 
+// 	if (connfd < 0) { 
+// 		printf("server accept failed...\n"); 
+// 		exit(0); 
+// 	} 
+// 	else
+// 		printf("server accept the client...\n"); 
+
+// 	// Function for chatting between client and server 
+// 	func(connfd); 
+
+// 	// After chatting close the socket 
+// 	close(sockfd); 
+// }

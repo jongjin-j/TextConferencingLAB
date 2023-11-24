@@ -14,12 +14,10 @@
 // Wait for user input
 char userInput[100];
 
-bool first = true;
 
 void welcome();
 
 void func(int sockfd) {
-  if (first == false) {
     char buff[MAX];
     int n;
     for (;;) {
@@ -39,7 +37,6 @@ void func(int sockfd) {
         break;
       }
     }
-  }
 }
 
 int main() {
@@ -66,7 +63,7 @@ int main() {
     printf("connection with the server failed...\n");
     exit(0);
   } else
-    first = false;
+    // first = false;
   // printf("connected to the server..\n");
 
   // function for chat
@@ -100,9 +97,9 @@ void welcome() {
   printf("====================================================================="
          "============\n");
 
-  // Prompt the user to enter something
-  printf("Enter a command: ");
+  // // Prompt the user to enter something
+  // printf("Enter a command: ");
 
-  scanf("%99s", userInput);
+  // scanf("%99s", userInput);
   return;
 }

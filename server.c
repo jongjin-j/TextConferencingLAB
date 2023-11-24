@@ -66,8 +66,14 @@ bool first = false;
 int main(int argc, char *argv[]) {
   // new variables
   int opt = true;
-  int master_socket, addrlen, new_socket, client_socket[30],
+  int master_socket, addrlen, new_socket,
       max_clients = 30, activity, i, valread, sd;
+
+  int client_socket[30];
+
+  for (int i = 0; i < 30; i++) {
+    client_socket[i] = -1;
+  }
 
   int max_sd;
   struct sockaddr_in address;
@@ -77,9 +83,6 @@ int main(int argc, char *argv[]) {
   // set of socket descriptrs
   fd_set readfds;
 
-  for (int i = 0; i < MAX_CLIENTS; i++) {
-    client_socket[i] = 0;
-  }
 
   int sockfd, connfd, len;
 
@@ -165,10 +168,10 @@ int main(int argc, char *argv[]) {
 
       // send new connection greeting message
 
-      char *message3 = "new message...\n";
-      if (send(new_socket, message3, strlen(message3), 0) != strlen(message3)) {
-        perror("Send");
-      }
+      // char *message3 = "new message...\n";
+      // if (send(new_socket, message3, strlen(message3), 0) != strlen(message3)) {
+      //   perror("Send");
+      // }
 
       puts("Welcome message sent successfully");
       first = true;
@@ -176,19 +179,16 @@ int main(int argc, char *argv[]) {
       // add new socket to array of sockets
       for (int i = 0; i < max_clients; i++) {
         // if position is empty
-        if (client_socket[i] == 0) {
+        if (client_socket[i] == -1) {
           client_socket[i] = new_socket;
           printf("Adding to list of sockets as %d\n", i);
+          numberOfClients++;
           break;
         }
       }
     }
+    else{
 
-    for (i = 0; i < max_clients; i++) {
-
-      sd = client_socket[i];
-      close(sd);
-    }
 
     // else it has some I/O operation on some other socket
     for (i = 0; i < max_clients; i++) {
@@ -205,7 +205,7 @@ int main(int argc, char *argv[]) {
                  inet_ntoa(address.sin_addr), ntohs(address.sin_port));
 
           // close the socket and mark as 0 in list for reuse
-
+          close(sd);
           client_socket[i] = 0;
         }
         // echo back message that came in
@@ -267,7 +267,9 @@ int main(int argc, char *argv[]) {
             }
           }
 
-          if (i == 0) {
+          // printf("This is number of clients: %d\n", numberOfClients);
+
+          if (numberOfClients - 1 == 0) {
             char *message2 = "hey client 0, its you!!...\n";
             send(sd, message2, strlen(message2), 0);
             break;
@@ -278,6 +280,7 @@ int main(int argc, char *argv[]) {
           }
         }
       }
+    }
     }
   }
   return 0;

@@ -203,23 +203,23 @@ void welcome() {
   printf("Available Commands:\n");
   printf("1. /login <username> <password> <IP> <port>    - Log in with your "
          "credentials\n");
-  printf("2. /logout                                     - Exit the
-             server\n "); printf(" 3. /
-             join<session_id> -
-         Join a specific "
-                         "session\n");
-  printf("4. /leavesession                               - Leave the current
-         "
-         "session\n");
+  printf("2. /logout  - Exit the server\n");
+  printf(" 3. / join<session_id> - Join a specific session\n");
+  printf("4. /leavesession - Leave the current session\n");
   printf(
-      "5. /createsession <session_id>                 - Create a new session
-      " "and join it\n");
+      "5. /createsession <session_id>  - Create a new session and join it\n");
   printf("6. /list                                       - List connected "
          "clients and available sessions\n");
   printf("7. /quit                                       - Terminate the "
          "program\n");
-  printf("8. <text>                                      - Send a message to
-  "
+  printf("8. <text>                                      - Send a message to "
          "the current conference session\n");
   printf("====================================================================="
          "============\n");
+
+  // // Prompt the user to enter something
+  // printf("Enter a command: ");
+
+  // scanf("%99s", userInput);
+  return;
+}

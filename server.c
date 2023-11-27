@@ -25,6 +25,30 @@
 #define MAX_PASSWORD_LENGTH 80
 #define PORT 8040
 #define SA struct sockaddr
+#define MAX_NAME 80
+#define MAX_DATA 80
+
+#define LOGIN 1
+#define LO_ACK 2
+#define LO_NAK 3
+#define EXIT 4
+#define JOIN 5
+#define JN_ACK 6
+#define JN_NAK 7
+#define LEAVE_SESS 8
+#define NEW_SESS 9
+#define NS_ACK 10
+#define MESSAGE 11
+#define QUERY 12
+#define QU_ACK 13
+#define LOGOUT 14
+
+struct message {
+  unsigned int type;
+  unsigned int size;
+  unsigned char source[MAX_NAME];
+  unsigned char data[MAX_DATA];
+};
 
 //-----------SESSION DATA STRUCTURES------/
 #define MAX_CLIENTS 3
@@ -65,6 +89,22 @@ struct User users[MAX_USERS] = {
 };
 
 bool first = false;
+
+void messageFormer(struct message *message, char *buffer) {
+  // format "type:size:source:data"
+  char *token = strtok(buffer, ":");
+  printf("token %s", token);
+  message->type = atoi(token);
+  token = strtok(NULL, ":");
+  printf("token %s", token);
+  message->size = atoi(token);
+  token = strtok(NULL, ":");
+  printf("token %s", token);
+  strcpy(message->source, token);
+  token = strtok(NULL, ":");
+  printf("token %s", token);
+  strcpy(message->data, token);
+}
 
 // Driver function
 int main(int argc, char *argv[]) {
@@ -207,14 +247,18 @@ int main(int argc, char *argv[]) {
             printf("Message from client %d: %s", i, buffer);
             int currClient = i;
 
+            struct message message;
+            messageFormer(&message, buffer);
+            //printf("DATA %s\n", message.data);
+
             //-------------------LOG
             // IN----------------------------------------------------
-            if (strncmp("/login", buffer, strlen("/login")) == 0) {
+            if (strncmp("/login", message.data, strlen("/login")) == 0) {
               // will need to perform some error checking in here
               // for things like correct types, handle cases for missing
               // arguments, etc.
               printf("\nCOMMAND: LOGIN...\n");
-              char *token = strtok(buffer, " "); // assuming space as delimter
+              char *token = strtok(message.data, " "); // assuming space as delimter
               token = strtok(NULL, " ");         // get second argument
               printf("client_ID is: %s\n", token);
               char *client_ID = token;
